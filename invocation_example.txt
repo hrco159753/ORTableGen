@@ -1,0 +1,1 @@
+./bin/table.py -mc 3 -oc 13 -tni res/teamNames.txt -pcal 5 -tias 3 -o out.xls
