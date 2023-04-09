@@ -33,8 +33,7 @@ def main():
     parser = argparse.ArgumentParser()
 
     parser.add_argument('-pii', '--points_info_input', help = 'File that contains points info.' , required = True)
-    parser.add_argument('-tni', '--team_names_input', help = 'File that contains the list of team names, each on seperate line.' , required = True)
-    parser.add_argument('-tias', '--team_index_array_size', help = 'Team index array size.', required = True)
+    parser.add_argument('-tii', '--teams_info_input', help = 'File that contains the list of team names, each on seperate line.' , required = True)
     parser.add_argument('-o', '--output', help = 'File where to output team tables.' , required = True)
 
     args = parser.parse_args()
@@ -42,10 +41,8 @@ def main():
     with open(args.points_info_input, 'r') as f:
         jsonPoints = json.load(f)
 
-    with open(args.team_names_input, 'r') as f:
-        teamNames = list(map(lambda x: x.strip(), f.readlines()))
-
-    genTeams = teams.generate(team_names = teamNames, index_array_length = int(args.team_index_array_size), max_index = len(list(jsonPoints.values())[0])-1)
+    with open(args.teams_info_input, 'r') as f:
+        genTeams = json.load(f)
 
     wb = xlwt.Workbook()
 
