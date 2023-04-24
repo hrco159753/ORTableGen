@@ -58,3 +58,21 @@ def generate_generic_point_labels(*, filename = None, generic_control_points, ce
         c = canvas.Canvas(filename, pagesize = A4)
         c.setFontSize(fontsize)
         draw_pages(c, all_labels = labels, tabledim = tabledim, pagedim = A4)
+
+def extract_gpc_additional_data(gpx_obj, att_name = "name", att_alias = "alias", att_score = "score"):
+    return [ { "name": getattr(waypoint, att_name), "alias": getattr(waypoint, att_alias), "score": int(getattr(waypoint, att_score)) } for i, waypoint in enumerate(gpx_obj.waypoints) ]
+
+def generate_cps(*, gcps, gcp_additional_data):
+    gcp_names = {gcp["name"] for gcp in gcps}
+    data_names = {data["name"] for data in gcp_additional_data}
+
+    if gcp_names != data_names:
+        print("Warning: Set gcps not corresponding with additonal data provided points.")
+
+    def find_additional_data_for_gcp(gcp):
+        # find_corresponding_data = lambda data: if data["name"] == gcp["name"]
+        find_corresponding_data = lambda _: True
+        return next(filter(find_corresponding_data, gcp_additional_data))
+
+    gcps_with_data = ((gcp, find_additional_data_for_gcp(gcp)) for gcp in gcps)
+    return [{"name": gcp["name"], "code": gcp["code"], "alias": data["alias"], "score": int(data["score"])} for (gcp, data) in gcps_with_data]
