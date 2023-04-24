@@ -6,10 +6,12 @@ import json
 import csv
 import random
 import string
-import fpdf
 
 from collections import namedtuple
 from more_itertools import chunked
+
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfgen import canvas
 
 def generate_generic_points(*, point_names: list[str], point_code_length: int) -> list[dict[str, str]]:
     gencode = lambda : ''.join((random.choice(string.ascii_uppercase) for _ in range(point_code_length)))
@@ -23,35 +25,44 @@ def generate_teams(*, team_names: list[str], team_code_length: int, team_code_hi
 
 def generate_generic_point_names(*, number_of_points: int, prefix_string: str) -> list[str]:
     return [f'{prefix_string}{i}' for i in range(1, number_of_points+1)]
-
-def generate_generic_point_labels(*, file_name = None, generic_control_points: list[dict[str, str]], cell_width: int, cell_height: int) -> None:    
-    dim_format = namedtuple('paper_format', ['height', 'width'])
     
-    paperdim = dim_format(210, 297)
-    celldim = dim_format(cell_width, cell_height)
+def draw_cell(c: canvas.Canvas, *, label, coords, celldim):
+    left_bottom_to_center = lambda left_bottom_coords: (left_bottom_coords[0] + celldim[0] // 2, left_bottom_coords[1] + celldim[1] // 2)
 
-    pdf = fpdf.FPDF(orientation = 'P', unit = 'mm', format = 'A4')
-    pdf.set_margins(0.0, 0.0, 0.0)
-    pdf.set_font('Arial', 'B', 16)
-        
-    colnum = paperdim.height // celldim.height
-    rownum = paperdim.width // celldim.width
+    c.rect(*coords, *celldim)
+    c.drawCentredString(*left_bottom_to_center(coords), label)
 
-    breakpoint()
 
-    for cells_per_page in chunked(generic_control_points, colnum * rownum):
-        print("page: ", cells_per_page)
-        pdf.add_page()
-        for cells_per_row in chunked(cells_per_page, colnum):
-            print("row: ", cells_per_row)
-            for gcp in cells_per_row:
-                pdf.cell(cell_width, cell_height, f'{gcp["name"]}: {gcp["code"]}', border = 1, ln = 0, align = 'C')
-            pdf.ln()
+def draw_table(c: canvas.Canvas, *, labels, tabledim, pagedim):
+    assert len(labels) <= tabledim[0] * tabledim[1]
+
+    celldim = (pagedim[0] // tabledim[0], pagedim[1] // tabledim[1])
+
+    index_to_coord = lambda i: (celldim[0] * (i % tabledim[0]), A4[1] - celldim[1] * (1 + (i // tabledim[0]))) 
+    cellcords = (index_to_coord(i) for i in range(0, tabledim[0] * tabledim[1]))
+    for (coords, label) in zip(cellcords, labels):
+        draw_cell(c, label = label, coords = coords, celldim = celldim)
     
-    if file_name == None:
-        pdf.output()
+def draw_pages(c: canvas.Canvas, *, all_labels, tabledim, pagedim):
+    for chunked_labels in chunked(all_labels, tabledim[0] * tabledim[1]):
+        draw_table(c, labels = list(chunked_labels), tabledim = tabledim, pagedim = pagedim)
+        c.showPage()
+
+    c.save()
+    
+def generate_generic_point_labels(*, filename = None, generic_control_points: list[dict[str, str]], cell_width: int, cell_height: int, fontsize: int = 20) -> None:
+    tabledim = (int(A4[0] // cell_width), int(A4[1] // cell_height))
+    labels = [f'{gcp["name"]}: {" ".join(c for c in gcp["code"])}' for gcp in generic_control_points]
+
+    if filename == None:
+        c = canvas.Canvas(sys.stdout, pagesize = A4)
+        c.setFontSize(fontsize)
+        draw_pages(c, all_labels = labels, tabledim = tabledim, pagedim = A4)
     else:
-        pdf.output(file_name)
+        c = canvas.Canvas(filename, pagesize = A4)
+        c.setFontSize(fontsize)
+        draw_pages(c, all_labels = labels, tabledim = tabledim, pagedim = A4)
+
 
 def gengcp_command(args) -> None:
     if args.input == None:
@@ -105,7 +116,7 @@ def gengcplabels_command(args) -> None:
         with open(args.input, 'r') as handle:
             gcps = json.load(handle)
 
-    generate_generic_point_labels(file_name = args.output, generic_control_points = gcps, cell_width = args.cell_width, cell_height = args.cell_height)
+    generate_generic_point_labels(filename = args.output, generic_control_points = gcps, cell_width = args.cell_width, cell_height = args.cell_height, fontsize = args.font_size)
 
 def parse_arguemnts():
     parser = argparse.ArgumentParser(
@@ -137,8 +148,9 @@ def parse_arguemnts():
     gengcplabels_parser = sub_parsers.add_parser('gengcplabels', help = 'Generate generic control point labels.')
     gengcplabels_parser.add_argument('-i', '--input', type = str, help = 'Input that supplies generic control points. By default it takes input from standard in. Input format is JSON.')
     gengcplabels_parser.add_argument('-o', '--output', type = str, help = 'Output to where the generic control points labels should be written. By default it writes the output to standard out. Output format is PDF.')
-    gengcplabels_parser.add_argument('-cw', '--cell_width', type = int, help = 'Cell width. By default cell width is set to 50.', default = 50)
-    gengcplabels_parser.add_argument('-ch', '--cell_height', type = int, help = 'Cell height. By default cell width is set to 30.', default = 30)
+    gengcplabels_parser.add_argument('-cw', '--cell_width', type = int, help = 'Cell width. By default cell width is set to 150.', default = 150)
+    gengcplabels_parser.add_argument('-ch', '--cell_height', type = int, help = 'Cell height. By default cell width is set to 70.', default = 70)
+    gengcplabels_parser.add_argument('-fs', '--font_size', type = int, help = 'Font size. By default is set to 20.', default = 20)
     gengcplabels_parser.set_defaults(func = gengcplabels_command)
 
     return parser.parse_args()
