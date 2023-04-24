@@ -7,6 +7,7 @@ from command.gengcp import GenGcp
 from command.gengcpname import GenGcpName
 from command.genteam import GenTeam
 from command.gengcplabel import GenGcpLabel
+from command.gencp import GenCp
 
 def parse_arguemnts():
     parser = argparse.ArgumentParser(
@@ -15,7 +16,7 @@ def parse_arguemnts():
     )
 
     sub_parsers = parser.add_subparsers(required = True)
-    commands = [GenGcp(), GenGcpName(), GenTeam(), GenGcpLabel()]
+    commands = [GenGcp(), GenGcpName(), GenTeam(), GenGcpLabel(), GenCp()]
 
     for command in commands:
         command.init(sub_parsers)
