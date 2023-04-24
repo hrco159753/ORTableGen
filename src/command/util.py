@@ -9,17 +9,17 @@ from more_itertools import chunked
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
-def generate_generic_points(*, point_names: list[str], point_code_length: int) -> list[dict[str, str]]:
+def generate_generic_points(*, point_names, point_code_length: int):
     gencode = lambda : ''.join((random.choice(string.ascii_uppercase) for _ in range(point_code_length)))
     return [{'name': point_name, 'code': gencode()} for point_name in point_names]
 
-def generate_teams(*, team_names: list[str], team_code_length: int, team_code_highest_index: int) -> list[dict[str, str]]:
+def generate_teams(*, team_names, team_code_length: int, team_code_highest_index: int):
     assert team_code_highest_index >= 0 and team_code_highest_index <=9, "Two digits index are not supported."
 
     gencode = lambda : ''.join(map(str, (random.randint(0, team_code_highest_index) for _ in range(team_code_length))))
     return [{'name': team_name, 'code': gencode()} for team_name in team_names]
 
-def generate_generic_point_names(*, number_of_points: int, prefix_string: str) -> list[str]:
+def generate_generic_point_names(*, number_of_points: int, prefix_string: str):
     return [f'{prefix_string}{i}' for i in range(1, number_of_points+1)]
     
 def draw_cell(c: canvas.Canvas, *, label, coords, celldim):
@@ -46,7 +46,7 @@ def draw_pages(c: canvas.Canvas, *, all_labels, tabledim, pagedim):
 
     c.save()
     
-def generate_generic_point_labels(*, filename = None, generic_control_points: list[dict[str, str]], cell_width: int, cell_height: int, fontsize: int = 20) -> None:
+def generate_generic_point_labels(*, filename = None, generic_control_points, cell_width: int, cell_height: int, fontsize: int = 20) -> None:
     tabledim = (int(A4[0] // cell_width), int(A4[1] // cell_height))
     labels = [f'{gcp["name"]}: {" ".join(c for c in gcp["code"])}' for gcp in generic_control_points]
 
