@@ -76,3 +76,10 @@ def generate_cps(*, gcps, gcp_additional_data):
 
     gcps_with_data = ((gcp, find_additional_data_for_gcp(gcp)) for gcp in gcps)
     return [{"name": gcp["name"], "code": gcp["code"], "alias": data["alias"], "score": int(data["score"])} for (gcp, data) in gcps_with_data]
+
+def generate_acquisition_tables(*, output_stream, cps, teams):
+    c = canvas.Canvas(output_stream, pagesize = A4)
+
+    draw_table(c, labels = ["Name", "Alias", "Code"], tabledim = (3, 1), pagedim = A4)
+    c.showPage()
+    c.save()
