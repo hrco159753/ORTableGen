@@ -1,3 +1,4 @@
+gpxpy==1.5.0
 more-itertools==9.1.0
 Pillow==9.5.0
 pyftpdlib==1.5.7
