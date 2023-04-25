@@ -128,4 +128,5 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-web/res/ftp
+web/res/ftp/*
+!web/res/ftp/.keep
