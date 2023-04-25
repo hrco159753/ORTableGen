@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<gpx version="1.1" creator="GDAL 3.0.4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ogr="http://osgeo.org/gdal" xmlns="http://www.topografix.com/GPX/1/1" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+<metadata><bounds minlat="45.864500430000000" minlon="16.027470690000001" maxlat="45.868171910000001" maxlon="16.031061579999999"/></metadata>                  
+<wpt lat="45.86552746" lon="16.02980729">
+  <name>P1</name>
+  <extensions>
+    <ogr:other_name>M1</ogr:other_name>
+    <ogr:score>1</ogr:score>
+  </extensions>
+</wpt>
+<wpt lat="45.86671014" lon="16.03066123">
+  <name>P2</name>
+  <extensions>
+    <ogr:other_name>M2</ogr:other_name>
+    <ogr:score>5</ogr:score>
+  </extensions>
+</wpt>
+<wpt lat="45.86710253" lon="16.03106158">
+  <name>P3</name>
+  <extensions>
+    <ogr:other_name>O1</ogr:other_name>
+    <ogr:score>2</ogr:score>
+  </extensions>
+</wpt>
+<wpt lat="45.86717015" lon="16.02978721">
+  <name>P4</name>
+  <extensions>
+    <ogr:other_name>O2</ogr:other_name>
+    <ogr:score>3</ogr:score>
+  </extensions>
+</wpt>
+<wpt lat="45.86817191" lon="16.02747069">
+  <name>P5</name>
+  <extensions>
+    <ogr:other_name>O3</ogr:other_name>
+    <ogr:score>4</ogr:score>
+  </extensions>
+</wpt>
+<wpt lat="45.86637926" lon="16.02825892">
+  <name>P6</name>
+  <extensions>
+    <ogr:other_name>O4</ogr:other_name>
+    <ogr:score>2</ogr:score>
+  </extensions>
+</wpt>
+<wpt lat="45.86450043" lon="16.02891097">
+  <name>P7</name>
+  <extensions>
+    <ogr:other_name>O5</ogr:other_name>
+    <ogr:score>6</ogr:score>
+  </extensions>
+</wpt>
+</gpx>
