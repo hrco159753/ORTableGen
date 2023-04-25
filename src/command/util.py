@@ -22,10 +22,10 @@ def generate_teams(*, team_names, team_code_length: int, team_code_highest_index
 def generate_generic_point_names(*, number_of_points: int, prefix_string: str):
     return [f'{prefix_string}{i}' for i in range(1, number_of_points+1)]
     
-def draw_cell(c: canvas.Canvas, *, label, coords, celldim):
-    left_bottom_to_center = lambda left_bottom_coords: (left_bottom_coords[0] + celldim[0] // 2, left_bottom_coords[1] + celldim[1] // 2)
+def draw_cell(c: canvas.Canvas, *, label, coords, celldim, border = True):
+    left_bottom_to_center = lambda left_bottom_coords: (left_bottom_coords[0] + celldim[0] // 2, left_bottom_coords[1] + celldim[1] // 2 - 5)
 
-    c.rect(*coords, *celldim)
+    c.rect(*coords, *celldim, stroke = border)
     c.drawCentredString(*left_bottom_to_center(coords), label)
 
 
@@ -59,8 +59,14 @@ def generate_generic_point_labels(*, filename = None, generic_control_points, ce
         c.setFontSize(fontsize)
         draw_pages(c, all_labels = labels, tabledim = tabledim, pagedim = A4)
 
-def extract_gpc_additional_data(gpx_obj, att_name = "name", att_alias = "alias", att_score = "score"):
-    return [ { "name": getattr(waypoint, att_name), "alias": getattr(waypoint, att_alias), "score": int(getattr(waypoint, att_score)) } for i, waypoint in enumerate(gpx_obj.waypoints) ]
+def extract_gpc_additional_data(gpx_obj):
+    def decompose_waypoint(waypoint):
+        name = waypoint.name
+        ext = waypoint.extensions
+        alias = next(filter(lambda x: x.tag.endswith('other_name'), ext)).text
+        score = next(filter(lambda x: x.tag.endswith('score'), ext)).text
+        return (name, alias, score)
+    return [ { "name": name, "alias": alias, "score": int(score) } for (name, alias, score) in map(decompose_waypoint, gpx_obj.waypoints) ]
 
 def generate_cps(*, gcps, gcp_additional_data):
     gcp_names = {gcp["name"] for gcp in gcps}
@@ -70,8 +76,7 @@ def generate_cps(*, gcps, gcp_additional_data):
         print("Warning: Set gcps not corresponding with additonal data provided points.")
 
     def find_additional_data_for_gcp(gcp):
-        # find_corresponding_data = lambda data: if data["name"] == gcp["name"]
-        find_corresponding_data = lambda _: True
+        find_corresponding_data = lambda data: data["name"] == gcp["name"]
         return next(filter(find_corresponding_data, gcp_additional_data))
 
     gcps_with_data = ((gcp, find_additional_data_for_gcp(gcp)) for gcp in gcps)
@@ -80,6 +85,14 @@ def generate_cps(*, gcps, gcp_additional_data):
 def generate_acquisition_tables(*, output_stream, cps, teams):
     c = canvas.Canvas(output_stream, pagesize = A4)
 
-    draw_table(c, labels = ["Name", "Alias", "Code"], tabledim = (3, 1), pagedim = A4)
-    c.showPage()
+    combine_labels = ((name, alias, "") for (name, alias) in ((cp["name"], cp["alias"]) for cp in cps))
+    combine_labels = [item for tuple in combine_labels for item in tuple]
+    celldim = (100, 50)
+    right_margin, bottom_margin = 100, -10
+
+    for team in teams:
+        c.setFontSize(20)
+        draw_table(c, labels = ["Name", "Alias", "Code"] + combine_labels, tabledim = (3, 1+len(cps)), pagedim = (A4[0], A4[1] - 20))
+        draw_cell(c, label = f"{team['name']}: {' '.join(team['code'])}", coords = (A4[0] - celldim[0] - right_margin, bottom_margin), celldim = celldim, border = False)
+        c.showPage()
     c.save()
