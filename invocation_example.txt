@@ -1,9 +1,0 @@
-# For table.py
-./bin/table.py -mc 3 -oc 13 -tni res/teamNames.txt -pcal 5 -tias 3 -o out.xls
-
-# For decupled table.py
-mkdir build && \
-./bin/makePointTableInfo.py -mc 3 -oc 14 -pcal 7 -o build/pointsInfo.json && \
-./bin/makePointTable.py -i build/pointsInfo.json -o build/points.xls && \
-./bin/makeFillTable.py -i build/pointsInfo.json -o build/fillTable.xls && \
-./bin/makeTeamTables.py -pii build/pointsInfo.json -tni res/teamNames.txt -tias 3 -o build/teams.xls
