@@ -119,7 +119,7 @@ def generate_workbook(*, output_file, cps, teams, maximum_additional_points = 0)
     point_worksheet.write(1, 6, maximum_additional_points)
 
     point_worksheet.write(0, 7, 'Maximum points')
-    point_worksheet.write(1, 7, "=SUM(E2:F2)")
+    point_worksheet.write(1, 7, "=SUM(F2:G2)")
 
     point_worksheet.autofit()
 
