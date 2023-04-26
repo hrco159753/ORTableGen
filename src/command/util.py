@@ -124,22 +124,22 @@ def generate_workbook(*, output_file, cps, teams, maximum_additional_points = 0)
     point_worksheet.autofit()
 
 
-    team_worksheet = workbook.add_worksheet("Teams")
+    teams_worksheet = workbook.add_worksheet("Teams")
     header_row = ("Name", "Code", "Time", "CP score", "Additional score", "Total score")
     other_rows = ((team["name"], team["code"], f"='{team['name']}'!G2", f"='{team['name']}'!H2", f"='{team['name']}'!I2", f"='{team['name']}'!J2") for team in teams)
 
     for (i, (name, code, time, cp_score, additional_score, total_score)) in enumerate(itertools.chain([header_row], other_rows)):
-        team_worksheet.write(i, 0, name)
-        team_worksheet.write(i, 1, code)
-        team_worksheet.write(i, 2, time)
-        team_worksheet.write(i, 3, cp_score)
-        team_worksheet.write(i, 4, additional_score)
-        team_worksheet.write(i, 5, total_score)
+        teams_worksheet.write(i, 0, name)
+        teams_worksheet.write(i, 1, code)
+        teams_worksheet.write(i, 2, time)
+        teams_worksheet.write(i, 3, cp_score)
+        teams_worksheet.write(i, 4, additional_score)
+        teams_worksheet.write(i, 5, total_score)
 
-    team_worksheet.write(4, 9, 'Winner')
-    team_worksheet.write(5, 9, '=INDIRECT(ADDRESS(MATCH(MAX(F2:F3),F:F,1),1))')
+    teams_worksheet.write(4, 9, 'Winner')
+    teams_worksheet.write(5, 9, '=INDIRECT(ADDRESS(MATCH(MAX(F2:F3),F:F,1),1))')
 
-    team_worksheet.autofit()
+    teams_worksheet.autofit()
 
     for team in teams:
         team_worksheet = workbook.add_worksheet(team["name"])
@@ -148,8 +148,8 @@ def generate_workbook(*, output_file, cps, teams, maximum_additional_points = 0)
             point_code = [c for c in point_code]
             return ''.join((point_code[i] for i in map(int,team_code)))
 
-        header_row = ("Point name", "Acquisition code", "Point score", "Did acquire?", "Score")
-        other_rows = (((cp["name"], get_acquisition_code(team["code"], cp["code"]), f"=Points!D{2+i}", "No", f'=IF(D{2+i}<>"No", C{2+i}, 0)')) for (i, cp) in enumerate(cps))
+        header_row = ("Point name/Point alias", "Acquisition code", "Point score", "Did acquire?", "Score")
+        other_rows = (((f'{cp["name"]}/{cp["alias"]}', get_acquisition_code(team["code"], cp["code"]), f"=Points!D{2+i}", "No", f'=IF(D{2+i}<>"No", C{2+i}, 0)')) for (i, cp) in enumerate(cps))
 
         for (i, (point_name, acq_code, point_score, did_acquire, score)) in enumerate(itertools.chain([header_row], other_rows)):
             team_worksheet.write(i, 0, point_name)
