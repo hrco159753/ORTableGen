@@ -2,6 +2,8 @@ import random
 import string
 import json
 import csv
+import xlsxwriter as xlsx
+import itertools
 
 from collections import namedtuple
 from more_itertools import chunked
@@ -96,3 +98,78 @@ def generate_acquisition_tables(*, output_stream, cps, teams):
         draw_cell(c, label = f"{team['name']}: {' '.join(team['code'])}", coords = (A4[0] - celldim[0] - right_margin, bottom_margin), celldim = celldim, border = False)
         c.showPage()
     c.save()
+
+def generate_workbook(*, output_file, cps, teams, maximum_additional_points = 0):
+    workbook = xlsx.Workbook(output_file)
+
+    point_worksheet = workbook.add_worksheet("Points")
+
+    header_row = ("Name", "Code", "Alias", "Score")
+    other_rows = ((cp["name"], cp["code"], cp["alias"], cp["score"]) for cp in cps)
+    for (i, (name, code, alias, score)) in enumerate(itertools.chain([header_row], other_rows)):
+        point_worksheet.write(i, 0, name)
+        point_worksheet.write(i, 1, code)
+        point_worksheet.write(i, 2, alias)
+        point_worksheet.write(i, 3, score)
+
+    point_worksheet.write(0, 5, "Max points from CPs")
+    point_worksheet.write(1, 5, f"=SUM(D2:D{len(cps) + 1})")
+
+    point_worksheet.write(0, 6, 'Maximum additional points')
+    point_worksheet.write(1, 6, maximum_additional_points)
+
+    point_worksheet.write(0, 7, 'Maximum points')
+    point_worksheet.write(1, 7, "=SUM(E2:F2)")
+
+    point_worksheet.autofit()
+
+
+    team_worksheet = workbook.add_worksheet("Teams")
+    header_row = ("Name", "Code", "Time", "CP score", "Additional score", "Total score")
+    other_rows = ((team["name"], team["code"], f"='{team['name']}'!G2", f"='{team['name']}'!H2", f"='{team['name']}'!I2", f"='{team['name']}'!J2") for team in teams)
+
+    for (i, (name, code, time, cp_score, additional_score, total_score)) in enumerate(itertools.chain([header_row], other_rows)):
+        team_worksheet.write(i, 0, name)
+        team_worksheet.write(i, 1, code)
+        team_worksheet.write(i, 2, time)
+        team_worksheet.write(i, 3, cp_score)
+        team_worksheet.write(i, 4, additional_score)
+        team_worksheet.write(i, 5, total_score)
+
+    team_worksheet.write(4, 9, 'Winner')
+    team_worksheet.write(5, 9, '=INDIRECT(ADDRESS(MATCH(MAX(F2:F3),F:F,1),1))')
+
+    team_worksheet.autofit()
+
+    for team in teams:
+        team_worksheet = workbook.add_worksheet(team["name"])
+
+        def get_acquisition_code(team_code, point_code):
+            point_code = [c for c in point_code]
+            return ''.join((point_code[i] for i in map(int,team_code)))
+
+        header_row = ("Point name", "Acquisition code", "Point score", "Did acquire?", "Score")
+        other_rows = (((cp["name"], get_acquisition_code(team["code"], cp["code"]), f"=Points!D{2+i}", "No", f'=IF(D{2+i}<>"No", C{2+i}, 0)')) for (i, cp) in enumerate(cps))
+
+        for (i, (point_name, acq_code, point_score, did_acquire, score)) in enumerate(itertools.chain([header_row], other_rows)):
+            team_worksheet.write(i, 0, point_name)
+            team_worksheet.write(i, 1, acq_code)
+            team_worksheet.write(i, 2, point_score)
+            team_worksheet.write(i, 3, did_acquire)
+            team_worksheet.write(i, 4, score)
+
+        team_worksheet.write(0, 6, 'Time')
+        team_worksheet.write(1, 6, "")
+
+        team_worksheet.write(0, 7, "CP score sum")
+        team_worksheet.write(1, 7, f"=SUM(E2:D{len(cps) + 1})")
+
+        team_worksheet.write(0, 8, 'Additional points')
+        team_worksheet.write(1, 8, "")
+
+        team_worksheet.write(0, 9, 'Total points')
+        team_worksheet.write(1, 9, "=SUM(H2:I2)")
+
+        team_worksheet.autofit()
+
+    workbook.close()
