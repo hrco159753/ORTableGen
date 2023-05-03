@@ -23,6 +23,9 @@ print(f'''
 </head>
 <body>
     <section>
+        <a href="/res/static/Rules.html">Rules</a>
+    </section>
+    <section>
     <h2>Registration</h2>
     <hr>
     <form action="/cgi-bin/register.py" target="" method="POST">
